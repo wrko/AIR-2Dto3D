@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -7,19 +8,20 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from data_loader import PoseDataset
+from setting import data_path, model_path, val_idx_path
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(14, 30)
+        self.fc1 = nn.Linear(18, 30)
         self.fc1_bn = nn.BatchNorm1d(30)
         self.fc2 = nn.Linear(30, 20)
         self.fc2_bn = nn.BatchNorm1d(20)
-        self.fc3 = nn.Linear(20, 7)
+        self.fc3 = nn.Linear(20, 9)
 
     def forward(self, x):
-        x = x.view(-1, 14)
+        x = x.view(-1, 18)
         x = F.relu(self.fc1_bn(self.fc1(x)))
         x = F.relu(self.fc2_bn(self.fc2(x)))
         x = self.fc3(x)
@@ -39,7 +41,7 @@ def validate(model, criterion, test_loader, device):
 
 def train():
     # load data
-    pose_dataset = PoseDataset('panoptic_dataset.pickle')
+    pose_dataset = PoseDataset(data_path)
 
     # random, non-contiguous train/val split
     indices = list(range(len(pose_dataset)))
@@ -52,7 +54,8 @@ def train():
     val_loader = DataLoader(dataset=pose_dataset, batch_size=32, sampler=val_sampler)
 
     # save val_idx
-    np.save('val_idx.npy', val_idx)
+    os.makedirs(os.path.dirname(val_idx_path), exist_ok=True)
+    np.save(val_idx_path, val_idx)
 
     # cpu or gpu?
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -103,7 +106,8 @@ def train():
 
     # save model
     print('finished training, saving the model...')
-    torch.save(net.state_dict(), 'trained_net.pt')
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    torch.save(net.state_dict(), model_path)
 
 
 if __name__ == "__main__":

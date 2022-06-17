@@ -2,6 +2,7 @@ import torch
 import pickle
 
 from torch.utils.data import Dataset, DataLoader
+from setting import data_path
 
 
 class PoseDataset(Dataset):
@@ -24,7 +25,7 @@ class PoseDataset(Dataset):
         return len(self.pairs)
 
     def __getitem__(self, idx):
-        idx_upper = [0, 3, 4, 5, 9, 10, 11]  # upper-body joints
+        idx_upper = [2, 0, 1, 3, 4, 5, 9, 10, 11]  # upper-body joints
         pair = self.pairs[idx]
 
         # [dim x joints] -> (x1,y1,x2,y2,...)
@@ -36,7 +37,7 @@ class PoseDataset(Dataset):
 
 if __name__ == '__main__':
     # test
-    pose_dataset = PoseDataset('panoptic_dataset.pickle')
+    pose_dataset = PoseDataset(data_path)
     train_loader = DataLoader(dataset=pose_dataset, batch_size=3, shuffle=True)
 
     data_iter = iter(train_loader)

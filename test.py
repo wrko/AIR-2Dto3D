@@ -8,6 +8,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 from data_loader import PoseDataset
 from train import Net
+from setting import data_path, model_path, val_idx_path
 
 
 def show_skeletons(skel_2d, z_out, z_gt=None):
@@ -15,7 +16,7 @@ def show_skeletons(skel_2d, z_out, z_gt=None):
     fig = plt.figure(figsize=(20, 20))
     ax1 = fig.add_subplot(1, 2, 1)
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
-    edges = np.array([[0, 1], [1, 2], [2, 3], [0, 4], [4, 5], [5, 6]])
+    edges = np.array([[0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [1, 6], [6, 7], [7, 8]])
 
     ax_2d = ax1
     ax_3d = ax2
@@ -26,7 +27,7 @@ def show_skeletons(skel_2d, z_out, z_gt=None):
         if z_gt is not None:
             ax_3d.plot(skel_2d[0, edge], z_gt[edge], skel_2d[1, edge], color='g')
 
-    ax_3d.set_aspect('equal')
+    ax_3d.set_aspect('auto')
     ax_3d.set_xlabel("x"), ax_3d.set_ylabel("z"), ax_3d.set_zlabel("y")
     ax_3d.set_xlim3d([-2, 2]), ax_3d.set_ylim3d([2, -2]), ax_3d.set_zlim3d([2, -2])
     ax_3d.view_init(elev=10, azim=-45)
@@ -35,7 +36,7 @@ def show_skeletons(skel_2d, z_out, z_gt=None):
     for edge in edges:
         ax_2d.plot(skel_2d[0, edge], skel_2d[1, edge], color='r')
 
-    ax_2d.set_aspect('equal')
+    ax_2d.set_aspect('auto')
     ax_2d.set_xlabel("x"), ax_2d.set_ylabel("y")
     ax_2d.set_xlim([-2, 2]), ax_2d.set_ylim([2, -2])
 
@@ -50,13 +51,13 @@ def test():
     # load net
     net = Net()
     net.to(device)
-    net.load_state_dict(torch.load('trained_net.pt'))
+    net.load_state_dict(torch.load(model_path))
     net.train(False)
 
     # sample data
-    val_idx = np.load('val_idx.npy')
+    val_idx = np.load(val_idx_path)
     val_sampler = SubsetRandomSampler(val_idx)
-    pose_dataset = PoseDataset('panoptic_dataset.pickle')
+    pose_dataset = PoseDataset(data_path)
     val_loader = DataLoader(dataset=pose_dataset, batch_size=1, sampler=val_sampler)
 
     while True:

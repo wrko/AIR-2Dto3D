@@ -11,6 +11,7 @@ from pyquaternion import Quaternion
 from scipy.spatial import distance
 
 from utils import angle_between
+from setting import src_data_dir, data_path
 
 
 def normalize_skeleton(_skel):
@@ -51,11 +52,9 @@ def rotate_skel(skel_3d, degree):
 
 
 def generate_dataset():
-    dataset_dir = './panoptic_dataset'
-
     # traverse directories
     frames = []
-    for dir_name, subdir_list, files in os.walk(dataset_dir):
+    for dir_name, subdir_list, files in os.walk(src_data_dir):
         if 'hdPose3d_stage1' in dir_name:
             print('Found directory: %s' % dir_name)
             for fname in files:
@@ -70,7 +69,7 @@ def generate_dataset():
     skeletons_3d = []
     for frame in frames:
         for body in frame['bodies']:
-            skel = np.array(body['joints15']).reshape((-1, 4)).transpose()
+            skel = np.array(body['joints19']).reshape((-1, 4)).transpose()
             skel = normalize_skeleton(skel)
             skeletons_3d.append(skel)
 
@@ -100,13 +99,14 @@ def generate_dataset():
     # save dataset
     print('saving...')
     dataset = {'3d': skeletons_3d, '2d': skeletons_2d}
-    with open('panoptic_dataset.pickle', 'wb') as f:
+    os.makedirs(os.path.dirname(data_path), exist_ok=True)
+    with open(data_path, 'wb') as f:
         pickle.dump(dataset, f)
 
 
 def review_dataset():
     # load
-    with open('panoptic_dataset.pickle', 'rb') as f:
+    with open(data_path, 'rb') as f:
         dataset = pickle.load(f)
 
     # init figures and variables
@@ -136,7 +136,7 @@ def review_dataset():
         for edge_i, edge in enumerate(edges_upper):
             ax_3d.plot(skel_3d[0, edge], skel_3d[2, edge], skel_3d[1, edge], color=colors[edge_i])
 
-        ax_3d.set_aspect('equal')
+        ax_3d.set_aspect('auto')
         ax_3d.set_xlabel("x"), ax_3d.set_ylabel("z"), ax_3d.set_zlabel("y")
         ax_3d.set_xlim3d([-2, 2]), ax_3d.set_ylim3d([2, -2]), ax_3d.set_zlim3d([2, -2])
         ax_3d.view_init(elev=10, azim=-45)
@@ -145,7 +145,7 @@ def review_dataset():
         for edge_i, edge in enumerate(edges_upper):
             ax_2d.plot(skel_2d[0, edge], skel_2d[1, edge], color=colors[edge_i])
 
-        ax_2d.set_aspect('equal')
+        ax_2d.set_aspect('auto')
         ax_2d.set_xlabel("x"), ax_2d.set_ylabel("y")
         ax_2d.set_xlim([-2, 2]), ax_2d.set_ylim([2, -2])
 
@@ -153,5 +153,5 @@ def review_dataset():
 
 
 if __name__ == "__main__":
-    generate_dataset()
-    # review_dataset()
+    # generate_dataset()
+    review_dataset()
